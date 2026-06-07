@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoChem Lab Engine — SRM 21CYB101J</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f3;
+            color: #1a1a18;
+            min-height: 100vh
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+            min-height: 600px
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            min-width: 240px;
+            background: #fff;
+            border-right: 0.5px solid rgba(0, 0, 0, 0.12);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1)
+        }
+
+        .sidebar-logo {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a18;
+            letter-spacing: -0.3px
+        }
+
+        .sidebar-sub {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px
+        }
+
+        .exp-list {
+            padding: 8px 0;
+            flex: 1
+        }
+
+        .exp-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-left: 2px solid transparent;
+            transition: background 0.15s
+        }
+
+        .exp-item:hover {
+            background: #f5f5f3
+        }
+
+        .exp-item.active {
+            background: #f0f4f9;
+            border-left-color: #185FA5
+        }
+
+        .exp-num {
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 2px
+        }
+
+        
+        .exp-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #1a1a18;
+            line-height: 1.4
+        }
+
+        /* Main */
+        .main {
+            flex: 1;
+            overflow-y: auto;
+            background: #f5f5f3
+        }
+
+        .topbar {
+            background: #fff;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10
+        }
+
+        .exp-title {
+            font-size: 15px;
+            font-weight: 500
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 8px
+        }
+
+        .btn {
+            padding: 6px 14px;
+            border: 0.5px solid rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            background: transparent;
+            color: #1a1a18;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.12s
+        }
+
+        .btn:hover {
+            background: #f5f5f3
+        }
+
+        .btn-primary {
+            background: #185FA5;
+            color: #fff;
+            border-color: #185FA5
+        }
+
+        .btn-primary:hover {
+            background: #0C447C
+        }
+
+        .content {
+            padding: 20px 24px;
+            display: grid;
+            gap: 16px
+        }
+
+        /* Cards */
+        .card {
+            background: #fff;
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 16px 20px
+        }
+
+        .card-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px
+        }
+
+        .aim-text {
+            font-size: 13px;
+            color: #1a1a18;
+            line-height: 1.7;
+            margin-bottom: 10px
+        }
+
+        .principle-text {
+            font-size: 12px;
+            color: #555;
+            line-height: 1.7
+        }
+
+        /* Tables */
+        .obs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px
+        }
+
+        .obs-table th {
+            background: #f8f8f6;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 500;
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+            font-size: 11px;
+            color: #666
+        }
+
+        .obs-table td {
+            padding: 6px 8px;
+            border: 0.5px solid rgba(0, 0, 0, 0.1)
+        }
+
+        .obs-table td input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: #1a1a18;
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            text-align: center;
+            padding: 2px
+        }
+
+        .obs-table td input:focus {
+            background: #e8f0fa;
+            border-radius: 4px
+        }
+
+        .obs-table tr:hover td {
+            background: #fafaf8
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px
+        }
+
+        /* Calculations */
+        .calc-step {
+            background: #f8f8f6;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            line-height: 1.8
+        }
+
+        .calc-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 11px;
+            margin-bottom: 4px
+        }
+
+        .calc-formula {
+            font-family: 'Courier New', monospace;
+            color: #1a1a18;
+            font-size: 12px
+        }
+
+        /* Results */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 12px
+        }
+
+        .metric {
+            background: #f8f8f6;
+            border-radius: 8px;
+            padding: 10px 12px
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 4px
+        }
+
+        .metric-val {
+            font-size: 18px;
+            font-weight: 500;
+            color: #1a1a18
+        }
+
+        .metric-unit {
+            font-size: 10px;
+            color: #888;
+            font-weight: 400
+        }
+
+        /* Alerts */
+        .warn {
+            background: #fef9ec;
+            border: 0.5px solid #f5c842;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #7a5e00;
+            margin-top: 8px
+        }
+
+        .error-box {
+            background: #fef2f2;
+            border: 0.5px solid #fca5a5;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #991b1b;
+            margin-top: 8px
+        }
+
+        /* Graph */
+        .graph-container {
+            position: relative;
+            height: 280px;
+            width: 100%
+        }
+
+        /* Viva */
+        .viva-q {
+            background: #f8f8f6;
+            border-left: 2px solid #185FA5;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6
+        }
+
+        .viva-q span {
+            color: #888
+        }
+
+        /* Endpoint badge */
+        .endpoint-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #eaf3de;
+            border: 0.5px solid #c0dd97;
+            border-radius: 8px;
+            padding: 5px 12px;
+            font-size: 11px;
+            color: #27500A;
+            font-weight: 500;
+            margin-top: 10px
+        }
+
+        .ep-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #639922;
+            flex-shrink: 0
+        }
+
+        /* Range bar */
+        .range-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #666;
+            margin-top: 12px
+        }
+
+        .range-bar {
+            flex: 1;
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            overflow: hidden
+        }
+
+        .range-fill-ok {
+            height: 100%;
+            background: #639922;
+            border-radius: 3px;
+            transition: width 0.4s
+        }
+
+        .range-fill-bad {
+            height: 100%;
+            background: #A32D2D;
+            border-radius: 3px;
+            transition: width 0.4s
+        }
+
+        .range-ok {
+            color: #27500A;
+            font-weight: 500
+        }
+
+        .range-bad {
+            color: #A32D2D;
+            font-weight: 500
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #aaa;
+            font-size: 13px
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">AutoChem Lab Engine</div>
+                <div class="sidebar-sub">SRM Institute — 21CYB101J</div>
+            </div>
+            <div class="exp-list" id="expList"></div>
+        </div>
+
+        <div class="main">
+            <div class="topbar">
+                <div class="exp-title" id="topTitle">Select an experiment</div>
+                <div class="topbar-actions">
+                    <button class="btn" onclick="exportCSV()">Export CSV</button>
+                    <button class="btn btn-primary" onclick="exportReport()">Lab Report</button>
+                </div>
+            </div>
+            <div class="content" id="mainContent">
+                <div class="card empty-state">Select an experiment from the sidebar to begin</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─── EXPERIMENT DATA ─────────────────────────────────────────────────────────
+        const EXPERIMENTS = [
+            {
+                id: 'edta',
+                num: 'Exp 1',
+                name: 'Water Hardness by EDTA',
+                aim: 'To determine the total, permanent and temporary hardness of a given sample of hard water by EDTA complexometric method. A standard hard water and an EDTA solution are provided.',
+                principle: 'Disodium salt of EDTA (ethylene diamine tetra acetic acid) reacts with Ca²⁺ and Mg²⁺ ions in hard water to form stable metal complexes. Eriochrome Black T (EBT) indicator gives wine red → steel blue colour change at the endpoint maintained at pH 9–10 using ammoniacal buffer (NH₄Cl + NH₄OH).',
+                titrations: [
+                    {
+                        label: 'Titration I — Standard Hard Water vs EDTA (Standardisation)',
+                        cols: ['Volume Hard Water (ml)', 'Initial (ml)', 'Final (ml)', 'Volume EDTA V₁ (ml)'],
+                        rows: [[20, '0', '', ''], [20, '0', '', ''], [20, '0', '', '']],
+                        fixed: [true, true, false, false]
+                    },
+                    {
+                        label: 'Titration II — Sample Hard Water vs EDTA (Total Hardness)',
+                        cols: ['Volume Sample (ml)', 'Initial (ml)', 'Final (ml)', 'Volume EDTA V₂ (ml)'],
+                        rows: [[20, '0', '', ''], [20, '0', '', ''], [20, '0', '', '']],
+                        fixed: [true, true, false, false]
+                    },
+                    {
+                        label: 'Titration III — Boiled Sample vs EDTA (Permanent Hardness)',
+                        cols: ['Volume Boiled (ml)', 'Initial (ml)', 'Final (ml)', 'Volume EDTA V₃ (ml)'],
+                        rows: [[20, '0', '', ''], [20, '0', '', ''], [20, '0', '', '']],
+                        fixed: [true, true, false, false]
+                    }
+                ],
+                calculate(data) {
+                    const v1 = concordant(data[0], 3);
+                    const v2 = concordant(data[1], 3);
+                    const v3 = concordant(data[2], 3);
+                    if (!v1) return { error: 'Enter at least one V₁ value (EDTA for standardisation).' };
+                    const total = v2 ? 1000 * v2 / v1 : 0;
+                    const perm = v3 ? 1000 * v3 / v1 : 0;
+                    const temp = total - perm;
+                    const steps = [
+                        { label: 'EDTA Titer Factor', formula: `1 ml EDTA = 20 / V₁ = 20 / ${v1.toFixed(2)} = ${(20 / v1).toFixed(4)} mg CaCO₃` },
+                        { label: 'Total Hardness Formula', formula: `Total Hardness = 1000 × V₂ / V₁ = 1000 × ${v2.toFixed(2)} / ${v1.toFixed(2)} = ${total.toFixed(2)} ppm` },
+                        { label: 'Permanent Hardness Formula', formula: `Permanent Hardness = 1000 × V₃ / V₁ = 1000 × ${v3.toFixed(2)} / ${v1.toFixed(2)} = ${perm.toFixed(2)} ppm` },
+                        { label: 'Temporary Hardness', formula: `Temporary Hardness = Total − Permanent = ${total.toFixed(2)} − ${perm.toFixed(2)} = ${temp.toFixed(2)} ppm` }
+                    ];
+                    const warn = total > 300 ? `Total hardness ${total.toFixed(0)} ppm exceeds 300 ppm — classified as very hard water. Verify readings.` : null;
+                    return {
+                        results: [
+                            { label: 'Total Hardness', value: total.toFixed(2), unit: 'ppm' },
+                            { label: 'Permanent Hardness', value: perm.toFixed(2), unit: 'ppm' },
+                            { label: 'Temporary Hardness', value: temp.toFixed(2), unit: 'ppm' }
+                        ],
+                        steps, warn,
+                        range: { label: 'Potable water limit', min: 0, max: 300, value: total }
+                    };
+                },
+                viva: [
+                    'What is EDTA and why is it used as a complexing agent for hardness determination?',
+                    'Why is ammoniacal buffer (pH 9–10) used in EDTA titrations?',
+                    'What causes temporary hardness and how is it removed by boiling?',
+                    'Why does the EBT indicator change from wine red to steel blue at the endpoint?',
+                    'What is the WHO permissible limit of hardness in drinking water?'
+                ],
+                graph: null
+            },
+
+            {
+                id: 'alkalinity',
+                num: 'Exp 2',
+                name: 'Na₂CO₃ & NaOH Mixture Titration',
+                aim: 'To determine the amount of sodium carbonate and sodium hydroxide present in a mixture by double indicator titration using phenolphthalein (P) and methyl orange (M) indicators against standard HCl.',
+                principle: 'Phenolphthalein endpoint (P): OH⁻ completely neutralised, CO₃²⁻ half-neutralised to HCO₃⁻. Methyl orange endpoint (M): remaining HCO₃⁻ fully neutralised. Condition P > M/2 → carbonate + hydroxide present. Condition P < M/2 → carbonate + bicarbonate. P = M/2 → carbonate only.',
+                titrations: [
+                    {
+                        label: 'Titration I — HCl vs Standard NaOH (Standardisation of HCl)',
+                        cols: ['Volume NaOH (ml)', 'Initial (ml)', 'Final (ml)', 'Volume HCl (ml)'],
+                        rows: [[20, '0', '', ''], [20, '0', '', ''], [20, '0', '', '']],
+                        fixed: [true, true, false, false]
+                    },
+                    {
+                        label: 'Titration II & III — Water Sample vs HCl (with both indicators)',
+                        cols: ['Volume Sample (ml)', 'Phenolphthalein End P (ml)', 'Methyl Orange End M (ml)'],
+                        rows: [[20, '', ''], [20, '', ''], [20, '', '']],
+                        fixed: [true, false, false]
+                    }
+                ],
+                calculate(data) {
+                    const v_hcl = concordant(data[0], 3);
+                    const P = concordant(data[1], 1);
+                    const M = concordant(data[1], 2);
+                    if (!v_hcl) return { error: 'Enter concordant HCl titre values in Titration I.' };
+                    if (!P || !M) return { error: 'Enter P (phenolphthalein) and M (methyl orange) endpoint values.' };
+                    const N_naoh = 0.025;
+                    const N2 = (20 * N_naoh) / v_hcl;
+                    let oh_vol, co3_vol, condition;
+                    if (P > M / 2) {
+                        oh_vol = 2 * P - M; co3_vol = 2 * (M - P);
+                        condition = 'P > M/2: Carbonate + Hydroxide alkalinity present';
+                    } else if (P < M / 2) {
+                        oh_vol = 0; co3_vol = 2 * P;
+                        condition = 'P < M/2: Carbonate + Bicarbonate alkalinity present';
+                    } else {
+                        oh_vol = 0; co3_vol = M;
+                        condition = 'P = M/2: Carbonate alkalinity only';
+                    }
+                    if (co3_vol < 0) co3_vol = 0;
+                    if (oh_vol < 0) oh_vol = 0;
+                    const N_oh = oh_vol * N2 / 20;
+                    const N_co3 = co3_vol * N2 / 20;
+                    const ppm_oh = N_oh * 50 * 1000;
+                    const ppm_co3 = N_co3 * 50 * 1000;
+                    const steps = [
+                        { label: 'Normality of HCl', formula: `N₂ = V₁ × N₁ / V₂ = 20 × 0.025 / ${v_hcl.toFixed(2)} = ${N2.toFixed(4)} N` },
+                        { label: 'Alkalinity Condition', formula: condition },
+                        { label: 'Volume for OH⁻ Alkalinity (A)', formula: `A = 2P − M = 2 × ${P.toFixed(2)} − ${M.toFixed(2)} = ${oh_vol.toFixed(2)} ml` },
+                        { label: 'Volume for CO₃²⁻ Alkalinity (B)', formula: `B = 2M − 2P = 2 × ${M.toFixed(2)} − 2 × ${P.toFixed(2)} = ${co3_vol.toFixed(2)} ml` },
+                        { label: 'OH⁻ Normality → ppm', formula: `N_OH = A × N₂ / 20 = ${oh_vol.toFixed(2)} × ${N2.toFixed(4)} / 20 = ${N_oh.toFixed(4)} N → ${ppm_oh.toFixed(2)} ppm` },
+                        { label: 'CO₃²⁻ Normality → ppm', formula: `N_CO₃ = B × N₂ / 20 = ${co3_vol.toFixed(2)} × ${N2.toFixed(4)} / 20 = ${N_co3.toFixed(4)} N → ${ppm_co3.toFixed(2)} ppm` }
+                    ];
+                    return {
+                        results: [
+                            { label: 'OH⁻ Alkalinity', value: ppm_oh.toFixed(2), unit: 'ppm' },
+                            { label: 'CO₃²⁻ Alkalinity', value: ppm_co3.toFixed(2), unit: 'ppm' },
+                            { label: 'Total Alkalinity', value: (ppm_oh + ppm_co3).toFixed(2), unit: 'ppm' }
+                        ],
+                        steps,
+                        range: { label: 'Acceptable alkalinity range', min: 0, max: 200, value: ppm_oh + ppm_co3 }
+                    };
+                },
+                viva: [
+                    'What are the five possible alkalinity conditions in water?',
+                    'Why are two indicators (phenolphthalein and methyl orange) used in this titration?',
+                    'What chemical reactions occur at the phenolphthalein endpoint?',
+                    'Explain the significance of the condition P > M/2.',
+                    'What is the acceptable alkalinity range in potable water as per BIS standards?'
+                ],
+                graph: null
+            },
+
+            {
+                id: 'phmetry',
+                num: 'Exp 3',
+                name: 'Acid Strength by pH Meter',
+                aim: 'To determine the strength of given HCl solution using a pH meter, titrated against standard 0.025 N NaOH. Endpoint determined by maximum ΔpH/ΔV (first derivative method).',
+                principle: 'pH = −log[H⁺]. As NaOH is added, fast-moving H⁺ ions are progressively replaced by slow Na⁺ ions causing gradual pH rise. At the equivalence point, complete neutralisation causes a sharp pH jump. The accurate endpoint is the maximum of the ΔpH/ΔV vs Volume curve.',
+                titrations: [
+                    {
+                        label: 'Titration — HCl (20 ml) vs NaOH, 1 ml additions',
+                        cols: ['Vol NaOH (ml)', 'pH reading'],
+                        rows: Array.from({ length: 20 }, (_, i) => [(i + 1).toString(), '']),
+                        fixed: [true, false]
+                    }
+                ],
+                calculate(data) {
+                    const rows = data[0] || [];
+                    const pts = rows
+                        .filter(r => r.v0 !== '' && r.v1 !== '' && !isNaN(parseFloat(r.v1)))
+                        .map(r => ({ v: parseFloat(r.v0), ph: parseFloat(r.v1) }));
+                    if (pts.length < 4) return { error: 'Enter at least 4 pH readings to detect the endpoint accurately.' };
+                    let maxDeriv = 0, epVol = 0;
+                    for (let i = 1; i < pts.length; i++) {
+                        const d = (pts[i].ph - pts[i - 1].ph) / (pts[i].v - pts[i - 1].v || 0.1);
+                        if (d > maxDeriv) { maxDeriv = d; epVol = (pts[i].v + pts[i - 1].v) / 2; }
+                    }
+                    const N2 = 0.025, N1 = epVol * N2 / 20, amt = N1 * 36.45;
+                    const steps = [
+                        { label: 'Endpoint Detection (Max ΔpH/ΔV)', formula: `Maximum first derivative = ${maxDeriv.toFixed(3)} at V = ${epVol.toFixed(2)} ml NaOH` },
+                        { label: 'Normality of HCl (V₁N₁ = V₂N₂)', formula: `N₁ = V₂ × N₂ / V₁ = ${epVol.toFixed(2)} × 0.025 / 20 = ${N1.toFixed(4)} N` },
+                        { label: 'Amount of HCl per litre', formula: `N₁ × Eq.Wt.(HCl) = ${N1.toFixed(4)} × 36.45 = ${amt.toFixed(4)} g/L` }
+                    ];
+                    return {
+                        results: [
+                            { label: 'Normality HCl', value: N1.toFixed(4), unit: 'N' },
+                            { label: 'Amount HCl', value: amt.toFixed(4), unit: 'g/L' },
+                            { label: 'Endpoint Volume', value: epVol.toFixed(2), unit: 'ml NaOH' }
+                        ],
+                        steps,
+                        graph: { type: 'ph', pts, ep: epVol },
+                        range: { label: 'Expected normality range', min: 0.01, max: 0.05, value: N1 }
+                    };
+                },
+                viva: [
+                    'What is the principle of pH metry in acid-base titrations?',
+                    'Why does pH jump sharply at the equivalence point during HCl–NaOH titration?',
+                    'How is the accurate endpoint determined from the ΔpH/ΔV vs Volume graph?',
+                    'What is the difference between the equivalence point and the endpoint?',
+                    'Why is a glass electrode used for pH measurement and what is its mechanism?'
+                ],
+                graph: 'ph'
+            },
+
+            {
+                id: 'conductometry',
+                num: 'Exp 4',
+                name: 'Acid Strength by Conductometry',
+                aim: 'To determine the strength and amount of HCl by conductometric titration against standard 0.025 N NaOH. Endpoint found by intersection of two linear segments.',
+                principle: 'Conductance ∝ ion concentration. Fast H⁺ replaced by slow Na⁺ → decreasing conductance until endpoint. After endpoint, excess fast OH⁻ ions → sharp conductance increase. The V-shaped minimum identifies the equivalence point. A graph of conductance vs volume gives two straight lines whose intersection is the endpoint.',
+                titrations: [
+                    {
+                        label: 'Titration — HCl (10 ml) vs NaOH — conductance in mho (or mS/cm)',
+                        cols: ['Vol NaOH (ml)', 'Conductance (mho)'],
+                        rows: Array.from({ length: 21 }, (_, i) => [i.toString(), '']),
+                        fixed: [true, false]
+                    }
+                ],
+                calculate(data) {
+                    const rows = data[0] || [];
+                    const pts = rows
+                        .filter(r => r.v1 !== '' && !isNaN(parseFloat(r.v1)))
+                        .map(r => ({ v: parseFloat(r.v0), c: parseFloat(r.v1) }));
+                    if (pts.length < 4) return { error: 'Enter at least 4 conductance readings.' };
+                    let minIdx = 0;
+                    pts.forEach((p, i) => { if (p.c < pts[minIdx].c) minIdx = i; });
+                    const epVol = pts[minIdx].v;
+                    const N2 = 0.025, N1 = epVol * N2 / 10, amt = N1 * 36.45 * 100 / 1000;
+                    const steps = [
+                        { label: 'Endpoint (Conductance Minimum)', formula: `V-graph intersection / minimum conductance at V = ${epVol.toFixed(1)} ml NaOH` },
+                        { label: 'Normality of HCl (V₁N₁ = V₂N₂)', formula: `N₂ = V₁ × N₁ / V₂ = ${epVol.toFixed(1)} × 0.025 / 10 = ${N1.toFixed(4)} N` },
+                        { label: 'Amount of HCl in 100 ml', formula: `N₂ × Eq.Wt. × 100/1000 = ${N1.toFixed(4)} × 36.45 × 0.1 = ${amt.toFixed(4)} g` }
+                    ];
+                    return {
+                        results: [
+                            { label: 'Normality HCl', value: N1.toFixed(4), unit: 'N' },
+                            { label: 'Amount HCl (100 ml)', value: amt.toFixed(4), unit: 'g' },
+                            { label: 'Endpoint Volume', value: epVol.toFixed(1), unit: 'ml' }
+                        ],
+                        steps,
+                        graph: { type: 'cond', pts, ep: epVol }
+                    };
+                },
+                viva: [
+                    'Why does conductance decrease initially when NaOH is added to HCl?',
+                    'What is a conductivity cell and how is it connected to the bridge?',
+                    'Why is distilled water (30 ml) added to the beaker before the titration?',
+                    'What is specific conductance and how does it differ from conductance?',
+                    'Why does conductance increase sharply after the equivalence point in strong acid–strong base titration?'
+                ],
+                graph: 'cond'
+            },
+
+            {
+                id: 'potentiometry',
+                num: 'Exp 5',
+                name: 'Fe²⁺ by Potentiometric Titration',
+                aim: 'To estimate the amount of ferrous ion present in a given FAS solution potentiometrically using 0.025 N KMnO₄. Endpoint found by maximum ΔE/ΔV.',
+                principle: 'KMnO₄ oxidises Fe²⁺ → Fe³⁺ in acidic medium: 5Fe²⁺ + MnO₄⁻ + 8H⁺ → 5Fe³⁺ + Mn²⁺ + 4H₂O. EMF depends on [Fe²⁺]/[Fe³⁺] ratio (Nernst equation). At endpoint, complete removal of Fe²⁺ causes a sharp EMF jump. Platinum electrode vs saturated calomel electrode reference.',
+                titrations: [
+                    {
+                        label: 'Titration — Fe²⁺ solution (10 ml) vs KMnO₄ — EMF in Volts, 1 ml additions',
+                        cols: ['Vol KMnO₄ (ml)', 'EMF (Volts)'],
+                        rows: Array.from({ length: 20 }, (_, i) => [i.toString(), '']),
+                        fixed: [true, false]
+                    }
+                ],
+                calculate(data) {
+                    const rows = data[0] || [];
+                    const pts = rows
+                        .filter(r => r.v1 !== '' && !isNaN(parseFloat(r.v1)))
+                        .map(r => ({ v: parseFloat(r.v0), e: parseFloat(r.v1) }));
+                    if (pts.length < 4) return { error: 'Enter at least 4 EMF readings to detect the endpoint.' };
+                    let maxD = 0, epVol = 0;
+                    for (let i = 1; i < pts.length; i++) {
+                        const d = (pts[i].e - pts[i - 1].e) / (pts[i].v - pts[i - 1].v || 0.01);
+                        if (d > maxD) { maxD = d; epVol = (pts[i].v + pts[i - 1].v) / 2; }
+                    }
+                    const N2 = 0.025, N1 = epVol * N2 / 10;
+                    const amtL = N1 * 55.85;
+                    const amt100 = N1 * 55.85 * 100 / 1000;
+                    const steps = [
+                        { label: 'Endpoint Detection (Max ΔE/ΔV)', formula: `Maximum EMF derivative = ${maxD.toFixed(3)} V/ml at V = ${epVol.toFixed(2)} ml KMnO₄` },
+                        { label: 'Normality of Fe²⁺ (V₁N₁ = V₂N₂)', formula: `N₁ = V₂ × N₂ / V₁ = ${epVol.toFixed(2)} × 0.025 / 10 = ${N1.toFixed(4)} N` },
+                        { label: 'Amount of Fe²⁺ per litre', formula: `N₁ × Eq.Wt.(Fe) = ${N1.toFixed(4)} × 55.85 = ${amtL.toFixed(4)} g/L` },
+                        { label: 'Amount of Fe²⁺ in 100 ml', formula: `${N1.toFixed(4)} × 55.85 × 100/1000 = ${amt100.toFixed(4)} g` }
+                    ];
+                    return {
+                        results: [
+                            { label: 'Normality Fe²⁺', value: N1.toFixed(4), unit: 'N' },
+                            { label: 'Fe²⁺ per litre', value: amtL.toFixed(4), unit: 'g/L' },
+                            { label: 'Endpoint Volume', value: epVol.toFixed(2), unit: 'ml KMnO₄' }
+                        ],
+                        steps,
+                        graph: { type: 'emf', pts, ep: epVol }
+                    };
+                },
+                viva: [
+                    'Write the balanced equation for the reaction between KMnO₄ and Fe²⁺ in acidic medium.',
+                    'Why is H₂SO₄ (and not HCl or HNO₃) added during this potentiometric titration?',
+                    'What is a calomel electrode and what is its standard electrode potential?',
+                    'Explain why the EMF of the cell jumps sharply at the equivalence point.',
+                    'What is the equivalent weight of ferrous ammonium sulphate (FAS)?'
+                ],
+                graph: 'emf'
+            },
+
+            {
+                id: 'mixedacid',
+                num: 'Exp 6',
+                name: 'HCl + CH₃COOH Mixture by Conductometry',
+                aim: 'To determine the strength and amount of HCl and acetic acid (CH₃COOH) in a mixture by conductometric titration against standard 0.025 N NaOH.',
+                principle: 'HCl (strong acid) neutralised first — fast H⁺ replaced by slow Na⁺ → conductance decreases to minimum at endpoint A. Then CH₃COOH neutralised — CH₃COONa formed is stronger electrolyte → conductance rises slowly to endpoint B. After B, excess OH⁻ causes sharp rise.',
+                titrations: [
+                    {
+                        label: 'Titration — Acid Mixture (10 ml) vs NaOH — conductance in mho',
+                        cols: ['Vol NaOH (ml)', 'Conductance (mho)'],
+                        rows: Array.from({ length: 26 }, (_, i) => [i.toString(), '']),
+                        fixed: [true, false]
+                    }
+                ],
+                calculate(data) {
+                    const rows = data[0] || [];
+                    const pts = rows
+                        .filter(r => r.v1 !== '' && !isNaN(parseFloat(r.v1)))
+                        .map(r => ({ v: parseFloat(r.v0), c: parseFloat(r.v1) }));
+                    if (pts.length < 6) return { error: 'Enter at least 6 conductance readings to detect both endpoints.' };
+                    let minIdx = 0;
+                    pts.forEach((p, i) => { if (p.c < pts[minIdx].c) minIdx = i; });
+                    const A = pts[minIdx].v;
+                    let maxIdx = minIdx;
+                    for (let i = minIdx; i < pts.length; i++) { if (pts[i].c > pts[maxIdx].c) maxIdx = i; }
+                    const B = pts[maxIdx].v;
+                    const N2 = 0.025;
+                    const N_hcl = A * N2 / 10;
+                    const N_aa = (B - A) * N2 / 10;
+                    const amt_hcl = N_hcl * 36.45 * 100 / 1000;
+                    const amt_aa = N_aa * 60 * 100 / 1000;
+                    const steps = [
+                        { label: '1st Endpoint A (HCl fully neutralised)', formula: `Conductance minimum at ${A.toFixed(1)} ml NaOH` },
+                        { label: '2nd Endpoint B (CH₃COOH fully neutralised)', formula: `Conductance plateau/maximum at ${B.toFixed(1)} ml NaOH` },
+                        { label: 'Normality of HCl', formula: `N_HCl = A × N₂ / V = ${A.toFixed(1)} × 0.025 / 10 = ${N_hcl.toFixed(4)} N` },
+                        { label: 'Normality of CH₃COOH', formula: `N_AA = (B−A) × N₂ / V = ${(B - A).toFixed(1)} × 0.025 / 10 = ${N_aa.toFixed(4)} N` },
+                        { label: 'Amount HCl in 100 ml', formula: `${N_hcl.toFixed(4)} × 36.45 × 100/1000 = ${amt_hcl.toFixed(4)} g` },
+                        { label: 'Amount CH₃COOH in 100 ml', formula: `${N_aa.toFixed(4)} × 60 × 100/1000 = ${amt_aa.toFixed(4)} g` }
+                    ];
+                    return {
+                        results: [
+                            { label: 'Normality HCl', value: N_hcl.toFixed(4), unit: 'N' },
+                            { label: 'Normality CH₃COOH', value: N_aa.toFixed(4), unit: 'N' },
+                            { label: 'Endpoint A', value: A.toFixed(1), unit: 'ml' },
+                            { label: 'Endpoint B', value: B.toFixed(1), unit: 'ml' }
+                        ],
+                        steps,
+                        graph: { type: 'mixed', pts, ep1: A, ep2: B }
+                    };
+                },
+                viva: [
+                    'Why is HCl (strong acid) neutralised before CH₃COOH (weak acid) during conductometric titration?',
+                    'Why does conductance increase slowly during acetic acid neutralisation stage?',
+                    'What is the significance of the two endpoints A and B on the conductance curve?',
+                    'Why is CH₃COONa a stronger electrolyte than CH₃COOH?',
+                    'Why is conductance measurement preferred over colour indicators in this experiment?'
+                ],
+                graph: 'mixed'
+            },
+
+            {
+                id: 'chloride',
+                num: 'Exp 7',
+                name: 'Chloride Content — Mohr\'s Method',
+                aim: 'To determine the amount of chloride ions present in 100 ml of the given water sample by Mohr\'s argentometric method using standard 0.025 N NaCl and approximately N/100 AgNO₃.',
+                principle: 'Cl⁻ ions are titrated against AgNO₃ using K₂CrO₄ as indicator. AgCl (white precipitate, Ksp = 1.8×10⁻¹⁰) forms preferentially. At the endpoint, all Cl⁻ removed; excess Ag⁺ reacts with CrO₄²⁻ to form brick-red Ag₂CrO₄ precipitate. Colour change: yellow → reddish-brown.',
+                titrations: [
+                    {
+                        label: 'Titration I — Standard NaCl (20 ml) vs AgNO₃ (Standardisation)',
+                        cols: ['Volume NaCl (ml)', 'Initial (ml)', 'Final (ml)', 'Volume AgNO₃ V₂ (ml)'],
+                        rows: [[20, '0', '', ''], [20, '0', '', ''], [20, '0', '', '']],
+                        fixed: [true, true, false, false]
+                    },
+                    {
+                        label: 'Titration II — Water Sample (20 ml) vs Standard AgNO₃',
+                        cols: ['Volume Sample (ml)', 'Initial (ml)', 'Final (ml)', 'Volume AgNO₃ (ml)'],
+                        rows: [[20, '0', '', ''], [20, '0', '', ''], [20, '0', '', '']],
+                        fixed: [true, true, false, false]
+                    }
+                ],
+                calculate(data) {
+                    const v2_std = concordant(data[0], 3);
+                    const v2_samp = concordant(data[1], 3);
+                    if (!v2_std) return { error: 'Enter AgNO₃ titre values for Titration I (standardisation).' };
+                    if (!v2_samp) return { error: 'Enter AgNO₃ titre values for Titration II (water sample).' };
+                    const N_agno3 = (20 * 0.01) / v2_std;
+                    const N3 = (v2_samp * N_agno3) / 20;
+                    const ppm = N3 * 35.46 * 1000;
+                    const amt100 = N3 * 35.46 * 100 / 1000;
+                    const steps = [
+                        { label: 'Normality of AgNO₃', formula: `N = V₁ × N₁ / V₂ = 20 × 0.01 / ${v2_std.toFixed(2)} = ${N_agno3.toFixed(4)} N` },
+                        { label: 'Normality of Cl⁻ in sample', formula: `N₃ = V₂ × N₂ / V₃ = ${v2_samp.toFixed(2)} × ${N_agno3.toFixed(4)} / 20 = ${N3.toFixed(4)} N` },
+                        { label: 'Chloride in 1000 ml (ppm)', formula: `35.46 × N₃ × 1000 = 35.46 × ${N3.toFixed(4)} × 1000 = ${ppm.toFixed(2)} ppm` },
+                        { label: 'Chloride in 100 ml', formula: `35.46 × N₃ × 100/1000 = 35.46 × ${N3.toFixed(4)} × 0.1 = ${amt100.toFixed(4)} g` }
+                    ];
+                    const warn = ppm > 250 ? `Chloride content ${ppm.toFixed(0)} ppm exceeds WHO/BIS limit of 250 ppm for drinking water!` : null;
+                    return {
+                        results: [
+                            { label: 'Chloride Content', value: ppm.toFixed(2), unit: 'ppm' },
+                            { label: 'Chloride in 100 ml', value: amt100.toFixed(4), unit: 'g' },
+                            { label: 'Normality Cl⁻', value: N3.toFixed(4), unit: 'N' }
+                        ],
+                        steps, warn,
+                        range: { label: 'WHO drinking water limit', min: 0, max: 250, value: ppm }
+                    };
+                },
+                viva: [
+                    'What is Mohr\'s method and under what pH range is it applicable?',
+                    'Why is K₂CrO₄ used as the indicator and not K₂Cr₂O₇?',
+                    'Why must the pH be maintained between 6.5 and 9 for this titration?',
+                    'What happens if excess K₂CrO₄ indicator is added to the solution?',
+                    'What is the WHO permissible limit for chloride in drinking water and what are its health effects?'
+                ],
+                graph: null
+            },
+
+            {
+                id: 'viscosity',
+                num: 'Exp 8',
+                name: 'Polymer MW by Viscometry',
+                aim: 'To determine the viscosity-average molecular weight of a polymer (PVA or PEG) using Ostwald viscometer and the Mark-Houwink equation: [η] = K·Mᵃ.',
+                principle: 'Relative viscosity ηᵣ = t/t₀ (solution flow time / solvent flow time). Specific viscosity ηₛₚ = ηᵣ − 1. Reduced viscosity = ηₛₚ/c. Intrinsic viscosity [η] = lim(c→0)(ηₛₚ/c) found by linear extrapolation. Molecular weight M = ([η]/K)^(1/a) where K = 6.3×10⁻⁴ and a = 0.64 for PVA.',
+                titrations: [
+                    {
+                        label: 'Viscosity Measurements — enter concentration and flow times',
+                        cols: ['Concentration c (g/dL)', 'Flow time t (s)', 'Solvent t₀ (s)'],
+                        rows: [['0.10', '', ''], ['0.20', '', ''], ['0.40', '', ''], ['0.80', '', '']],
+                        fixed: [false, false, false]
+                    }
+                ],
+                calculate(data) {
+                    const rows = (data[0] || []).filter(r => r.v0 && r.v1 && r.v2 &&
+                        !isNaN(parseFloat(r.v0)) && !isNaN(parseFloat(r.v1)) && !isNaN(parseFloat(r.v2)));
+                    if (rows.length < 2) return { error: 'Enter at least 2 complete rows (concentration + flow times).' };
+                    const K = 6.3e-4, a = 0.64;
+                    const pts = rows.map(r => {
+                        const c = parseFloat(r.v0), t = parseFloat(r.v1), t0 = parseFloat(r.v2);
+                        const nr = t / t0, nsp = nr - 1, red = nsp / c;
+                        return { c, t, t0, nr: nr.toFixed(4), nsp: nsp.toFixed(4), red: red.toFixed(4) };
+                    });
+                    const n = pts.length;
+                    const sumX = pts.reduce((a, p) => a + p.c, 0);
+                    const sumY = pts.reduce((a, p) => a + parseFloat(p.red), 0);
+                    const sumXY = pts.reduce((a, p) => a + p.c * parseFloat(p.red), 0);
+                    const sumX2 = pts.reduce((a, p) => a + p.c * p.c, 0);
+                    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+                    const intrinsic = (sumY - slope * sumX) / n;
+                    const MW = Math.pow(Math.abs(intrinsic) / K, 1 / a);
+                    const steps = [
+                        { label: 'Reduced viscosity values', formula: pts.map(p => `c=${p.c}: ηₛₚ/c = ${p.red} dL/g`).join('   |   ') },
+                        { label: 'Linear regression', formula: `Reduced viscosity = [η] + slope × c; slope = ${slope.toFixed(4)}` },
+                        { label: 'Intrinsic viscosity [η]', formula: `Extrapolation to c = 0: [η] = ${intrinsic.toFixed(4)} dL/g` },
+                        { label: 'Mark-Houwink equation', formula: `M = ([η]/K)^(1/a) = (${intrinsic.toFixed(4)} / ${K})^(1/${a}) = ${MW.toFixed(0)} g/mol` }
+                    ];
+                    return {
+                        results: [
+                            { label: 'Intrinsic Viscosity', value: intrinsic.toFixed(4), unit: 'dL/g' },
+                            { label: 'Molecular Weight', value: MW.toFixed(0), unit: 'g/mol' },
+                            { label: 'Data Points', value: pts.length.toString(), unit: 'readings' }
+                        ],
+                        steps
+                    };
+                },
+                viva: [
+                    'What is intrinsic viscosity [η] and how is it experimentally determined?',
+                    'State the Mark-Houwink equation and define each term including K and a constants.',
+                    'What is an Ostwald viscometer and how is it used to measure flow time accurately?',
+                    'What is the difference between number-average, weight-average, and viscosity-average molecular weights?',
+                    'Why must dilute polymer solutions be used for viscometry measurements?'
+                ],
+                graph: null
+            }
+        ];
+
+        // ─── HELPERS ─────────────────────────────────────────────────────────────────
+        function concordant(rows, colIdx) {
+            if (!rows) return 0;
+            const key = 'v' + colIdx;
+            const vals = rows.map(r => parseFloat(r[key])).filter(v => !isNaN(v) && v > 0);
+            if (!vals.length) return 0;
+            return vals.reduce((a, b) => a + b, 0) / vals.length;
+        }
+
+        // ─── STATE ───────────────────────────────────────────────────────────────────
+        let currentExp = null;
+        let tableData = {};
+        let chartInst = null;
+
+        // ─── INIT ─────────────────────────────────────────────────────────────────────
+        function init() {
+            const list = document.getElementById('expList');
+            EXPERIMENTS.forEach(exp => {
+                const d = document.createElement('div');
+                d.className = 'exp-item';
+                d.id = 'ei_' + exp.id;
+                d.innerHTML = `<div class="exp-num">${exp.num}</div><div class="exp-name">${exp.name}</div>`;
+                d.onclick = () => loadExp(exp);
+                list.appendChild(d);
+            });
+        }
+
+        function loadExp(exp) {
+            document.querySelectorAll('.exp-item').forEach(e => e.classList.remove('active'));
+            const el = document.getElementById('ei_' + exp.id);
+            if (el) el.classList.add('active');
+            currentExp = exp;
+            if (!tableData[exp.id]) {
+                tableData[exp.id] = exp.titrations.map(t =>
+                    t.rows.map(r => Object.fromEntries(r.map((v, i) => ['v' + i, v])))
+                );
+            }
+            document.getElementById('topTitle').textContent = exp.name;
+            render(exp);
+        }
+
+        // ─── RENDER ──────────────────────────────────────────────────────────────────
+        function render(exp) {
+            if (chartInst) { chartInst.destroy(); chartInst = null; }
+            const mc = document.getElementById('mainContent');
+            mc.innerHTML = '';
+
+            mc.appendChild(makeCard('Aim & Principle', `
+    <div class="aim-text">${exp.aim}</div>
+    <div class="principle-text" style="margin-top:10px">${exp.principle}</div>
+  `));
+
+            exp.titrations.forEach((t, ti) => {
+                mc.appendChild(makeCard(t.label, buildTable(exp, ti, t)));
+            });
+
+            mc.appendChild(makeCard('Calculation Engine', `
+    <button class="btn btn-primary" onclick="runCalc('${exp.id}')" style="margin-bottom:14px">Run Calculation</button>
+    <div id="calcResult_${exp.id}"></div>
+  `));
+
+            if (exp.graph) {
+                mc.appendChild(makeCard('Graph — Auto Endpoint Detection',
+                    '<div class="graph-container"><canvas id="mainChart"></canvas></div>'
+                ));
+            }
+
+            mc.appendChild(makeCard('Viva Questions',
+                exp.viva.map((q, i) =>
+                    `<div class="viva-q"><span>${i + 1}.&nbsp;</span>${q}</div>`
+                ).join('')
+            ));
+        }
+
+        function makeCard(title, html) {
+            const d = document.createElement('div');
+            d.className = 'card';
+            d.innerHTML = `<div class="card-title">${title}</div>${html}`;
+            return d;
+        }
+
+        function buildTable(exp, ti, t) {
+            const rows = tableData[exp.id][ti];
+            let html = `<table class="obs-table"><thead><tr>
+    ${t.cols.map(c => `<th>${c}</th>`).join('')}
+  </tr></thead><tbody>`;
+            rows.forEach((row, ri) => {
+                html += '<tr>';
+                Object.values(row).forEach((v, ci) => {
+                    const fixed = t.fixed && t.fixed[ci];
+                    if (fixed) {
+                        html += `<td style="text-align:center;color:#888">${v}</td>`;
+                    } else {
+                        html += `<td><input type="text" value="${v}"
+          onchange="updateCell('${exp.id}',${ti},${ri},${ci},this.value)"
+          placeholder="—"></td>`;
+                    }
+                });
+                html += '</tr>';
+            });
+            html += `</tbody></table>
+    <div class="table-actions">
+      <button class="btn" onclick="addRow('${exp.id}',${ti})">+ Add Row</button>
+    </div>`;
+            return html;
+        }
+
+        // ─── TABLE ACTIONS ────────────────────────────────────────────────────────────
+        function updateCell(expId, ti, ri, ci, val) {
+            tableData[expId][ti][ri]['v' + ci] = val;
+        }
+
+        function addRow(expId, ti) {
+            const exp = EXPERIMENTS.find(e => e.id === expId);
+            const newRow = Object.fromEntries(exp.titrations[ti].cols.map((_, i) => ['v' + i, '']));
+            tableData[expId][ti].push(newRow);
+            render(exp);
+        }
+
+        // ─── CALCULATION ENGINE ───────────────────────────────────────────────────────
+        function runCalc(expId) {
+            const exp = EXPERIMENTS.find(e => e.id === expId);
+            const result = exp.calculate(tableData[expId]);
+            const el = document.getElementById('calcResult_' + expId);
+            if (!el) return;
+
+            if (result.error) {
+                el.innerHTML = `<div class="error-box">${result.error}</div>`;
+                return;
+            }
+
+            let html = '';
+
+            // Metric cards
+            html += `<div class="metric-grid">
+    ${result.results.map(r => `
+      <div class="metric">
+        <div class="metric-label">${r.label}</div>
+        <div class="metric-val">${r.value} <span class="metric-unit">${r.unit}</span></div>
+      </div>`).join('')}
+  </div>`;
+
+            // Calculation steps
+            if (result.steps) {
+                result.steps.forEach(s => {
+                    html += `<div class="calc-step">
+        <div class="calc-label">${s.label}</div>
+        <div class="calc-formula">${s.formula}</div>
+      </div>`;
+                });
+            }
+
+            // Warning
+            if (result.warn) html += `<div class="warn">${result.warn}</div>`;
+
+            // Range bar
+            if (result.range) {
+                const pct = Math.min(100, Math.max(0, (result.range.value / result.range.max) * 100)).toFixed(1);
+                const ok = result.range.value <= result.range.max;
+                html += `<div class="range-row">
+      <span>${result.range.label}: 0 – ${result.range.max}</span>
+      <div class="range-bar">
+        <div class="${ok ? 'range-fill-ok' : 'range-fill-bad'}" style="width:${pct}%"></div>
+      </div>
+      <span class="${ok ? 'range-ok' : 'range-bad'}">${typeof result.range.value === 'number' ? result.range.value.toFixed(2) : result.range.value
+                    }</span>
+    </div>`;
+            }
+
+            // Endpoint badge
+            if (result.graph) {
+                html += `<div class="endpoint-badge">
+      <span class="ep-dot"></span>Endpoint auto-detected — see graph below
+    </div>`;
+            }
+
+            el.innerHTML = html;
+
+            if (result.graph) drawGraph(result.graph);
+        }
+
+        // ─── GRAPH ENGINE ─────────────────────────────────────────────────────────────
+        function drawGraph(g) {
+            const canvas = document.getElementById('mainChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (chartInst) { chartInst.destroy(); chartInst = null; }
+
+            let datasets = [], xlabel = '', scales = {};
+
+            if (g.type === 'ph') {
+                xlabel = 'Volume NaOH (ml)';
+                const dph = [];
+                for (let i = 1; i < g.pts.length; i++) {
+                    const dy = (g.pts[i].ph - g.pts[i - 1].ph) / (g.pts[i].v - g.pts[i - 1].v || 0.1);
+                    dph.push({ x: (g.pts[i].v + g.pts[i - 1].v) / 2, y: +dy.toFixed(3) });
+                }
+                datasets = [
+                    {
+                        label: 'pH', data: g.pts.map(p => ({ x: p.v, y: +p.ph.toFixed(3) })),
+                        borderColor: '#185FA5', backgroundColor: 'transparent', tension: 0.4, yAxisID: 'y', pointRadius: 4
+                    },
+                    {
+                        label: 'ΔpH/ΔV', data: dph,
+                        borderColor: '#639922', backgroundColor: 'transparent', tension: 0.3,
+                        borderDash: [5, 3], yAxisID: 'y2', pointRadius: 3
+                    }
+                ];
+                scales = {
+                    x: { title: { display: true, text: xlabel, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y: { title: { display: true, text: 'pH', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y2: { position: 'right', title: { display: true, text: 'ΔpH/ΔV', font: { size: 11 } }, grid: { display: false } }
+                };
+            } else if (g.type === 'cond') {
+                xlabel = 'Volume NaOH (ml)';
+                datasets = [{
+                    label: 'Conductance (mho)', data: g.pts.map(p => ({ x: p.v, y: +p.c.toFixed(5) })),
+                    borderColor: '#185FA5', backgroundColor: 'rgba(24,95,165,0.08)', tension: 0.2,
+                    fill: true, pointRadius: 4, yAxisID: 'y'
+                }];
+                scales = {
+                    x: { title: { display: true, text: xlabel, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y: { title: { display: true, text: 'Conductance (mho)', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } }
+                };
+            } else if (g.type === 'mixed') {
+                xlabel = 'Volume NaOH (ml)';
+                datasets = [{
+                    label: 'Conductance (mho)', data: g.pts.map(p => ({ x: p.v, y: +p.c.toFixed(5) })),
+                    borderColor: '#185FA5', backgroundColor: 'rgba(24,95,165,0.08)', tension: 0.25,
+                    fill: true, pointRadius: 3, yAxisID: 'y'
+                }];
+                scales = {
+                    x: { title: { display: true, text: xlabel, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y: { title: { display: true, text: 'Conductance (mho)', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } }
+                };
+            } else if (g.type === 'emf') {
+                xlabel = 'Volume KMnO₄ (ml)';
+                const de = [];
+                for (let i = 1; i < g.pts.length; i++) {
+                    const d = (g.pts[i].e - g.pts[i - 1].e) / (g.pts[i].v - g.pts[i - 1].v || 0.01);
+                    de.push({ x: (g.pts[i].v + g.pts[i - 1].v) / 2, y: +d.toFixed(4) });
+                }
+                datasets = [
+                    {
+                        label: 'EMF (V)', data: g.pts.map(p => ({ x: p.v, y: +p.e.toFixed(4) })),
+                        borderColor: '#185FA5', backgroundColor: 'transparent', tension: 0.4, yAxisID: 'y', pointRadius: 4
+                    },
+                    {
+                        label: 'ΔE/ΔV', data: de,
+                        borderColor: '#D85A30', backgroundColor: 'transparent', tension: 0.3,
+                        borderDash: [5, 3], yAxisID: 'y2', pointRadius: 3
+                    }
+                ];
+                scales = {
+                    x: { title: { display: true, text: xlabel, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y: { title: { display: true, text: 'EMF (Volts)', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y2: { position: 'right', title: { display: true, text: 'ΔE/ΔV (V/ml)', font: { size: 11 } }, grid: { display: false } }
+                };
+            }
+
+            // Endpoint annotation lines drawn via plugin
+            const epAnnotations = [];
+            if (g.ep != null) epAnnotations.push({ v: g.ep, color: '#A32D2D', label: `EP: ${g.ep.toFixed(1)} ml` });
+            if (g.ep1 != null) epAnnotations.push({ v: g.ep1, color: '#A32D2D', label: `A: ${g.ep1.toFixed(1)} ml` });
+            if (g.ep2 != null) epAnnotations.push({ v: g.ep2, color: '#854F0B', label: `B: ${g.ep2.toFixed(1)} ml` });
+
+            const epPlugin = {
+                id: 'epLines',
+                afterDraw(chart) {
+                    const ctx = chart.ctx;
+                    epAnnotations.forEach(ep => {
+                        const xPos = chart.scales.x.getPixelForValue(ep.v);
+                        ctx.save();
+                        ctx.setLineDash([5, 4]);
+                        ctx.strokeStyle = ep.color;
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(xPos, chart.chartArea.top);
+                        ctx.lineTo(xPos, chart.chartArea.bottom);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                        ctx.fillStyle = ep.color;
+                        ctx.font = '10px -apple-system, sans-serif';
+                        ctx.fillText(ep.label, xPos + 4, chart.chartArea.top + 14);
+                        ctx.restore();
+                    });
+                }
+            };
+
+            chartInst = new Chart(ctx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    parsing: false,
+                    plugins: {
+                        legend: { labels: { font: { size: 11 }, boxWidth: 12 } },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales
+                },
+                plugins: [epPlugin]
+            });
+        }
+
+        // ─── EXPORT ───────────────────────────────────────────────────────────────────
+        function exportCSV() {
+            if (!currentExp) { alert('Please select an experiment first.'); return; }
+            let csv = `AutoChem Lab Engine — ${currentExp.name}\nSRM Institute of Science and Technology — 21CYB101J\n\n`;
+            currentExp.titrations.forEach((t, ti) => {
+                csv += t.label + '\n';
+                csv += t.cols.join(',') + '\n';
+                (tableData[currentExp.id]?.[ti] || []).forEach(r => {
+                    csv += Object.values(r).join(',') + '\n';
+                });
+                csv += '\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'autochem_' + currentExp.id + '.csv';
+            a.click();
+        }
+
+        function exportReport() {
+            if (!currentExp) { alert('Please select an experiment first.'); return; }
+            const win = window.open('', '_blank');
+            win.document.write(`<!DOCTYPE html><html><head>
+    <title>Lab Report — ${currentExp.name}</title>
+    <style>
+      body{font-family:Georgia,serif;max-width:800px;margin:40px auto;padding:20px;color:#111}
+      h1{font-size:20px;border-bottom:2px solid #111;padding-bottom:8px}
+      h2{font-size:15px;margin-top:24px;color:#333}
+      p{font-size:13px;line-height:1.8}
+      table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}
+      th,td{border:1px solid #ccc;padding:6px 10px;text-align:left}
+      th{background:#f0f0f0}
+      .footer{margin-top:40px;font-size:11px;color:#888;border-top:1px solid #ddd;padding-top:12px}
+    </style></head><body>
+    <h1>CHEM LAB CALCULATOR</h1>
+    <p><strong>Subject:</strong> Chemistry Lab — 21CYB101J &nbsp;|&nbsp;
+       <strong>Experiment:</strong> ${currentExp.num} — ${currentExp.name}</p>
+    <h2>Aim</h2><p>${currentExp.aim}</p>
+    <h2>Principle</h2><p>${currentExp.principle}</p>
+    <h2>Viva Questions</h2>
+    <ol>${currentExp.viva.map(q => `<li>${q}</li>`).join('')}</ol>
+    <div class="footer">Generated by AutoChem Lab Engine &bull; ${new Date().toLocaleDateString()}</div>
+  </body></html>`);
+            win.document.close();
+            win.print();
+        }
+
+        // ─── BOOTSTRAP ────────────────────────────────────────────────────────────────
+        init();
+    </script>
+</body>
+
+</html>
